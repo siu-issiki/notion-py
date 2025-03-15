@@ -41,7 +41,7 @@ def create_session(client_specified_retry=None):
             backoff_factor=1,
             status_forcelist=(429, 502, 503, 504),
             # CAUTION: adding 'POST' to this list which is not technically idempotent
-            allowed_methods=(
+            method_whitelist=(
                 "POST",
                 "HEAD",
                 "TRACE",
