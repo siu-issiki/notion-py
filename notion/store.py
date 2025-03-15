@@ -314,9 +314,9 @@ class RecordStore(object):
         limit=50
     ):
 
-        assert not (
-            aggregate and aggregations
-        ), "Use only one of `aggregate` or `aggregations` (old vs new format)"
+        # assert not (
+        #     aggregate and aggregations
+        # ), "Use only one of `aggregate` or `aggregations` (old vs new format)"
 
         # convert singletons into lists if needed
         if isinstance(aggregate, dict):

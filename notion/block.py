@@ -347,7 +347,8 @@ class Block(Record):
             if permanently:
                 block_id = self.id
                 self._client.post(
-                    "deleteBlocks", {"blockIds": [block_id], "permanentlyDelete": True}
+                    "deleteBlocks", {"blockIds": [
+                        block_id], "permanentlyDelete": True}
                 )
                 del self._client._store._values["block"][block_id]
 
@@ -591,13 +592,15 @@ class PageBlock(BasicBlock):
         """
         Returns a list of blocks that referencing the current PageBlock. Note that only PageBlocks support backlinks.
         """
-        data = self._client.post("getBacklinksForBlock", {"blockId": self.id}).json()
+        data = self._client.post("getBacklinksForBlock", {
+                                 "blockId": self.id}).json()
         backlinks = []
         for block in data.get("backlinks") or []:
             mention = block.get("mentioned_from")
             if not mention:
                 continue
-            block_id = mention.get("block_id") or mention.get("parent_block_id")
+            block_id = mention.get(
+                "block_id") or mention.get("parent_block_id")
             if block_id:
                 backlinks.append(self._client.get_block(block_id))
         return backlinks
@@ -690,13 +693,30 @@ class EmbedOrUploadBlock(EmbedBlock):
 
         with open(path, "rb") as f:
             response = requests.put(
-                data["signedPutUrl"], data=f, headers={"Content-type": mimetype}
+                data["signedPutUrl"], data=f, headers={
+                    "Content-type": mimetype}
             )
             response.raise_for_status()
 
         self.display_source = data["url"]
         self.source = data["url"]
-        self.file_id = data["url"][len(S3_URL_PREFIX) :].split("/")[0]
+        self.file_id = data["url"][len(S3_URL_PREFIX):].split("/")[0]
+
+    def upload_file_bin(self, binary: bytes, filename: str, mimetype: str):
+        data = self._client.post(
+            "getUploadFileUrl",
+            {"bucket": "secure", "name": filename, "contentType": mimetype},
+        ).json()
+
+        response = requests.put(
+            data["signedPutUrl"], data=binary, headers={
+                "Content-type": mimetype}
+        )
+        response.raise_for_status()
+
+        self.display_source = data["url"]
+        self.source = data["url"]
+        self.file_id = data["url"][len(S3_URL_PREFIX):].split("/")[0]
 
 
 class VideoBlock(EmbedOrUploadBlock):
@@ -726,6 +746,37 @@ class ImageBlock(EmbedOrUploadBlock):
 
     _type = "image"
 
+    def upload_to_collection_row(self, collection_row, image_data, filename, mimetype="image/jpeg"):
+        self._client = collection_row._client
+        self._parent = collection_row
+
+        request_data = {
+            "bucket": "secure",
+            "name": filename,
+            "contentType": mimetype,
+            "record": {
+                "table": "block",
+                "id": self.id,
+                "spaceId": self._client.current_space.id
+            }
+        }
+
+        response = self._client.post("getUploadFileUrl", request_data)
+        upload_data = response.json()
+
+        response = requests.put(
+            upload_data["signedPutUrl"],
+            data=image_data,
+            headers={"Content-type": mimetype}
+        )
+        response.raise_for_status()
+
+        self.display_source = upload_data["url"]
+        self.source = upload_data["url"]
+        self.file_id = upload_data["url"].split(":")[1].split(":")[0]
+
+        return self
+
 
 class BookmarkBlock(EmbedBlock):
 
@@ -738,7 +789,8 @@ class BookmarkBlock(EmbedBlock):
     title = property_map("title")
 
     def set_new_link(self, url):
-        self._client.post("setBookmarkMetadata", {"blockId": self.id, "url": url})
+        self._client.post("setBookmarkMetadata", {
+                          "blockId": self.id, "url": url})
         self.refresh()
 
 
@@ -837,7 +889,8 @@ class CollectionViewBlockViews(Children):
             record_id, collection=self._parent._collection
         )
         view.set("collection_id", self._parent._collection.id)
-        view_ids = self._parent.get(CollectionViewBlockViews.child_list_key, [])
+        view_ids = self._parent.get(
+            CollectionViewBlockViews.child_list_key, [])
         view_ids.append(view.id)
         self._parent.set(CollectionViewBlockViews.child_list_key, view_ids)
 
