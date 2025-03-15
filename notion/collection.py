@@ -39,7 +39,8 @@ class NotionDate(object):
             data = obj[0][1][0][1]
         else:
             return None
-        start = cls._parse_datetime(data.get("start_date"), data.get("start_time"))
+        start = cls._parse_datetime(
+            data.get("start_date"), data.get("start_time"))
         end = cls._parse_datetime(data.get("end_date"), data.get("end_time"))
         timezone = data.get("time_zone")
         reminder = data.get("reminder")
@@ -337,13 +338,15 @@ def _normalize_query_data(data, collection, recursing=False):
     elif isinstance(data, dict):
         # convert slugs to property ids
         if "property" in data:
-            data["property"] = _normalize_property_name(data["property"], collection)
+            data["property"] = _normalize_property_name(
+                data["property"], collection)
         # convert any instantiated objects into their ids
         if "value" in data:
             if hasattr(data["value"], "id"):
                 data["value"] = data["value"].id
         for key in data:
-            data[key] = _normalize_query_data(data[key], collection, recursing=True)
+            data[key] = _normalize_query_data(
+                data[key], collection, recursing=True)
     return data
 
 
@@ -383,25 +386,25 @@ class CollectionQuery(object):
         result_class = QUERY_RESULT_TYPES.get(self.type, QueryResult)
 
         kwargs = {
-            'collection_id':self.collection.id,
-            'collection_view_id':self.collection_view.id,
-            'search':self.search,
-            'type':self.type,
-            'aggregate':self.aggregate,
-            'aggregations':self.aggregations,
-            'filter':self.filter,
-            'sort':self.sort,
-            'calendar_by':self.calendar_by,
-            'group_by':self.group_by,
-            'limit':0
+            'collection_id': self.collection.id,
+            'collection_view_id': self.collection_view.id,
+            'search': self.search,
+            'type': self.type,
+            'aggregate': self.aggregate,
+            'aggregations': self.aggregations,
+            'filter': self.filter,
+            'sort': self.sort,
+            'calendar_by': self.calendar_by,
+            'group_by': self.group_by,
+            'limit': 0
         }
 
         if self.limit == -1:
-            # fetch remote total 
+            # fetch remote total
             result = self._client.query_collection(
                 **kwargs
             )
-            self.limit = result.get("total",-1)
+            self.limit = result.get("total", -1)
 
         kwargs['limit'] = self.limit
 
@@ -517,7 +520,8 @@ class CollectionRowBlock(PageBlock):
             val = [v.strip() for v in val[0][0].split(",")] if val else []
         if prop["type"] in ["person"]:
             val = (
-                [self._client.get_user(item[1][0][1]) for item in val if item[0] == "‣"]
+                [self._client.get_user(item[1][0][1])
+                 for item in val if item[0] == "‣"]
                 if val
                 else []
             )
@@ -573,13 +577,15 @@ class CollectionRowBlock(PageBlock):
                 "Object does not have property '{}'".format(identifier)
             )
         if prop["type"] in ["select"] or prop["type"] in ["multi_select"]:
-            schema_update, prop = self.collection.check_schema_select_options(prop, val)
+            schema_update, prop = self.collection.check_schema_select_options(
+                prop, val)
             if schema_update:
                 self.collection.set(
                     "schema.{}.options".format(prop["id"]), prop["options"]
                 )
 
-        path, val = self._convert_python_to_notion(val, prop, identifier=identifier)
+        path, val = self._convert_python_to_notion(
+            val, prop, identifier=identifier)
 
         self.set(path, val)
 
@@ -590,7 +596,8 @@ class CollectionRowBlock(PageBlock):
                 val = ""
             if not isinstance(val, str):
                 raise TypeError(
-                    "Value passed to property '{}' must be a string.".format(identifier)
+                    "Value passed to property '{}' must be a string.".format(
+                        identifier)
                 )
             val = markdown_to_notion(val)
         if prop["type"] in ["number"]:
@@ -658,7 +665,8 @@ class CollectionRowBlock(PageBlock):
         if prop["type"] in ["checkbox"]:
             if not isinstance(val, bool):
                 raise TypeError(
-                    "Value passed to property '{}' must be a bool.".format(identifier)
+                    "Value passed to property '{}' must be a bool.".format(
+                        identifier)
                 )
             val = [["Yes" if val else "No"]]
         if prop["type"] in ["relation"]:
@@ -678,6 +686,15 @@ class CollectionRowBlock(PageBlock):
             return prop["type"], val
 
         return ["properties", prop["id"]], val
+
+    def add_image(self, image_data, filename, mimetype="image/jpeg"):
+        from notion.block import ImageBlock
+
+        image_block = self.children.add_new(ImageBlock)
+        image_block.upload_to_collection_row(
+            self, image_data, filename, mimetype)
+
+        return image_block
 
     def remove(self):
         # Mark the block as inactive
@@ -770,6 +787,7 @@ class QueryResult(object):
         else:
             return False
         return item_id in self._block_ids
+
 
 class TableQueryResult(QueryResult):
 
