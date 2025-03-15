@@ -37,11 +37,11 @@ def create_session(client_specified_retry=None):
         retry = client_specified_retry
     else:
         retry = Retry(
-            5,
-            backoff_factor=0.3,
-            status_forcelist=(502, 503, 504),
+            total=10,
+            backoff_factor=1,
+            status_forcelist=(429, 502, 503, 504),
             # CAUTION: adding 'POST' to this list which is not technically idempotent
-            method_whitelist=(
+            allowed_methods=(
                 "POST",
                 "HEAD",
                 "TRACE",

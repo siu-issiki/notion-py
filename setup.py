@@ -1,5 +1,22 @@
+# -*- coding: utf-8 -*-
 import setuptools
 
+with open("README.md", "r", encoding='utf-8') as fh:
+    long_description = fh.read()
+
+
+def get_requirements(fname):
+    "Takes requirements from requirements.txt and returns a list."
+    with open(fname) as fp:
+        reqs = list()
+        for lib in fp.read().split("\n"):
+            # Ignore pypi flags and comments
+            if not lib.startswith("-") or lib.startswith("#"):
+                reqs.append(lib.strip())
+        return reqs
+
+
+install_requires = get_requirements("requirements.txt")
 setuptools.setup(
     name="notion",
     version="0.0.28",

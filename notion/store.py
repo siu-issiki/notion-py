@@ -302,6 +302,7 @@ class RecordStore(object):
         self,
         collection_id,
         collection_view_id,
+        space_id,
         search="",
         type="table",
         aggregate=[],
@@ -324,28 +325,37 @@ class RecordStore(object):
             sort = [sort]
 
         data = {
-            "collection": {
-                "id": collection_id,
-                "spaceId": self._client.current_space.id
-            },
             "collectionView": {
                 "id": collection_view_id,
-                "spaceId": self._client.current_space.id
+                "spaceId": space_id
             },
             "loader": {
-                'filter': filter,
-                'reducers': {
-                    'collection_group_results': {
-                        'limit': limit,
-                        'type': 'results',
+                "reducers": {
+                    "collection_group_results": {
+                        "type": "results",
+                        "limit": limit,
                     },
                 },
+                "sort": sort,
                 "searchQuery": search,
-                'sort': sort,
+                "userId": self._client.current_user.id,
                 "userTimeZone": str(get_localzone()),
-                "type": 'reducer',
             },
+            "source": {
+                "id": collection_id,
+                "spaceId": space_id,
+                "type": "collection"
+            }
         }
+
+        if filter:
+            data["loader"]["filter"] = filter
+
+        if aggregate:
+            data["loader"]["aggregate"] = aggregate
+
+        if aggregations:
+            data["loader"]["aggregations"] = aggregations
 
         response = self._client.post("queryCollection", data).json()
 
